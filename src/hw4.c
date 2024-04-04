@@ -1,7 +1,35 @@
 #include "hw4.h"
 
 void initialize_game(ChessGame *game) {
-    (void)game;
+
+    //create our chess game board
+    char initalizeGameBoard[8][8] = {
+        {'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'},
+        {'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'},
+        {'.', '.', '.', '.', '.', '.', '.', '.'},
+        {'.', '.', '.', '.', '.', '.', '.', '.'},
+        {'.', '.', '.', '.', '.', '.', '.', '.'},
+        {'.', '.', '.', '.', '.', '.', '.', '.'},
+        {'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'},
+        {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'}
+    };
+
+    //copy everything into from initalized to the chessboard from the struct
+    for(int i = 0; i < 8; i++) {
+        for(int j = 0; j < 8; j++) {
+            game -> chessboard[i][j] = initalizeGameBoard[i][j];
+        }
+    }
+
+    //set move count to 0
+    game -> moveCount = 0;
+    
+    //set captured count to 0
+    game -> capturedCount = 0;
+
+    //set current player to white
+    game -> currentPlayer = WHITE_PLAYER;
+
 }
 
 void chessboard_to_fen(char fen[], ChessGame *game) {
