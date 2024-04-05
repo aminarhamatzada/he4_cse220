@@ -146,11 +146,22 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
 /* verifies the knight is moving in an L shape (two squares vertically and one square horizontally, or two squares horizontally and one square vertically) */
 bool is_valid_knight_move(int src_row, int src_col, int dest_row, int dest_col) {
 
-    (void)src_row;
-    (void)src_col;
-    (void)dest_row;
-    (void)dest_col;
-    return false;
+    //check if there is no piece at the location 
+    if (src_row < 0 || src_row >= 8 ||src_col < 0 || src_col >= 8 || dest_row < 0 || dest_row >= 8 || dest_col < 0 || dest_col >= 8) {
+        return false;
+    }
+
+    int row = abs(src_row - dest_row);
+    int col = abs(src_col - dest_col);
+
+    bool checkLShape = false;
+    checkLShape = ((row == 2 && col == 1) || (row == 1 && col == 2));
+
+    if(checkLShape) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /* verifies the bishop is moving diagonally and there is a clear path */
@@ -161,12 +172,15 @@ bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, 
         return false;
     }
 
-    (void)src_row;
-    (void)src_col;
-    (void)dest_row;
-    (void)dest_col;
-    (void)game;
-    return false;
+    int row, col;
+    row = dest_row - src_row;
+    col = dest_col - src_col;
+
+    if(abs(row) == abs(col)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /* verifies that the queen is moving like a rook (horizontally or vertically) or like a bishop (diagonally */
@@ -178,9 +192,11 @@ bool is_valid_queen_move(int src_row, int src_col, int dest_row, int dest_col, C
     }
 
     //queen can move like a rook or a bishop
-    return is_valid_rook_move(src_row, src_col, dest_row, dest_col, game) ||
-            is_valid_bishop_move(src_row, src_col, dest_row, dest_col, game);
-
+    if(is_valid_rook_move(src_row, src_col, dest_row, dest_col, game) || is_valid_bishop_move(src_row, src_col, dest_row, dest_col, game)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 /* verifies that the king is moving one square in any direction (horizontally, vertically, or diagonally) */
@@ -192,11 +208,9 @@ bool is_valid_king_move(int src_row, int src_col, int dest_row, int dest_col) {
     cols = src_col - dest_col;
 
     //check if the diff in rows and cols is <= 1
-    if((rows == 0 || rows == 1 || rows == -1) &&
-        (cols == 0 || cols == 1 || cols == -1)) {
+    if((rows == 0 || rows == 1 || rows == -1) && (cols == 0 || cols == 1 || cols == -1)) {
             return true;
     } 
-    
     else {
         return false;
     }
@@ -232,9 +246,6 @@ bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_
     } else {
         return false;
     }
-    return false;
-    (void)piece;
-    (void)game;
 }
 
 void fen_to_chessboard(const char *fen, ChessGame *game) {
