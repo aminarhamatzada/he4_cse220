@@ -64,7 +64,15 @@ int color_movement(int src_row, int dest_row, int current_player) {
 bool is_valid_pawn_move(char piece, int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
     //check if there is no piece at the location
-    if(game -> chessboard[src_row][src_col] != piece) {
+    // if(game -> chessboard[src_row][src_col] != piece || game -> chessboard[src_row][src_col] != toupper(piece)) {
+    //     return false;
+    // }
+
+    piece = game -> chessboard[src_row][src_col];
+    //char dest = game -> chessboard[dest_row][dest_col];
+
+    //check if the piece is not a pawn
+    if(piece != 'p' && piece != 'P') {
         return false;
     }
 
@@ -98,7 +106,15 @@ bool is_valid_pawn_move(char piece, int src_row, int src_col, int dest_row, int 
 bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
     //check if there is no piece at the location
-    if(game -> chessboard[src_row][src_col] != 'r' || game -> chessboard[src_row][src_col] != 'R') {
+    // if(game -> chessboard[src_row][src_col] != 'r' && game -> chessboard[src_row][src_col] != 'R') {
+    //     return false;
+    // }
+
+    char piece = game -> chessboard[src_row][src_col];
+    //char dest = game -> chessboard[dest_row][dest_col];
+
+    //check if the piece is not a pawn
+    if(piece != 'r' && piece != 'R') {
         return false;
     }
 
@@ -139,7 +155,6 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
             }
         }
     }
-
     return true;
 }
 
@@ -168,7 +183,7 @@ bool is_valid_knight_move(int src_row, int src_col, int dest_row, int dest_col) 
 bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
     //check if there is no piece at the location
-    if(game -> chessboard[src_row][src_col] != 'b' || game -> chessboard[src_row][src_col] != 'B') {
+    if(game -> chessboard[src_row][src_col] != 'b' && game -> chessboard[src_row][src_col] != 'B') {
         return false;
     }
 
@@ -187,7 +202,7 @@ bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, 
 bool is_valid_queen_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
     //check if there is no piece at the location
-    if(game -> chessboard[src_row][src_col] != 'q' || game -> chessboard[src_row][src_col] != 'Q') {
+    if(game -> chessboard[src_row][src_col] != 'q' && game -> chessboard[src_row][src_col] != 'Q') {
         return false;
     }
 
