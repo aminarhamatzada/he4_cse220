@@ -174,9 +174,6 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
 /* verifies the knight is moving in an L shape (two squares vertically and one square horizontally, or two squares horizontally and one square vertically) */
 bool is_valid_knight_move(int src_row, int src_col, int dest_row, int dest_col) {
 
-    //    EXPECT_EQ(true, is_valid_knight_move(5, 5, 6, 7)) ; // valid move
-    //    EXPECT_EQ(false, is_valid_knight_move(5, 5, 2, 3)) ; // invalid move
-
     int row = abs(src_row - dest_row);
     int col = abs(src_col - dest_col);
 
@@ -291,9 +288,31 @@ void fen_to_chessboard(const char *fen, ChessGame *game) {
 }
 
 int parse_move(const char *move, ChessMove *parsed_move) {
+
+    char srcCol = move[0];
+    char srcRow = move[1];
+    char destCol = move[2];
+    char destRow = move[3];
+
+    //parse_move_invalid_format
+    if(((int)strlen(move) != 4 && (int)strlen(move) != 5) ||
+        ((srcCol < 'a' || srcCol > 'h') || (destCol < 'a' || destCol > 'h'))) {
+        return PARSE_MOVE_INVALID_FORMAT;
+    }
+
+    //parse_move_out_of_bounds
+    if(srcRow < '1' || srcRow > '8' || destRow < '1' || destRow > '8') {
+        return PARSE_MOVE_OUT_OF_BOUNDS;
+    }
+
+    //parse_move_invalid_destination
+
+    //parse_move_invalid_promotion
+
+
     (void)move;
     (void)parsed_move;
-    return -999;
+    return 0;
 }
 
 int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_move) {
