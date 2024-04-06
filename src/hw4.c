@@ -42,19 +42,19 @@ int color_movement(int src_row, int dest_row, int current_player) {
     
     //check movement for white player
     if(current_player == WHITE_PLAYER) {
-        if(src_row < dest_row) {
-            return 1;
-        } else if(src_row > dest_row) {
-            return -1;
+        if(src_row > dest_row) {
+            return 1; //valid moving upwards
+        } else if(src_row < dest_row) {
+            return -1; //invalid moving backwards
         }   
     }
 
     //check movement for black player
     else if(current_player == BLACK_PLAYER) {
          if(src_row < dest_row) {
-            return -1;
+            return 2; //valid moving downwards
         } else if(src_row > dest_row) {
-            return 1;
+            return -1; //invalid moving backwards 
         }  
     }
     return 0;
@@ -64,12 +64,9 @@ int color_movement(int src_row, int dest_row, int current_player) {
 bool is_valid_pawn_move(char piece, int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
     //check if there is no piece at the location
-    // if(game -> chessboard[src_row][src_col] != piece || game -> chessboard[src_row][src_col] != toupper(piece)) {
-    //     return false;
-    // }
-
-    piece = game -> chessboard[src_row][src_col];
-    //char dest = game -> chessboard[dest_row][dest_col];
+    if(game -> chessboard[src_row][src_col] != piece && game -> chessboard[src_row][src_col] != toupper(piece)) {
+        return false;
+    }
 
     //check if the piece is not a pawn
     if(piece != 'p' && piece != 'P') {
@@ -79,41 +76,57 @@ bool is_valid_pawn_move(char piece, int src_row, int src_col, int dest_row, int 
     //check the direction based on the players color (call helper)
     int currentPlayer = game -> currentPlayer;
     int direction = color_movement(src_row, dest_row, currentPlayer);
-    if(direction == 0) {
+
+    //check invalid direction 
+    if(direction == 0 || direction == -1) { 
         return false;
     }
 
-    //check if it moves one and the next spot is open
-    if(dest_row == src_row + direction && game -> chessboard[dest_row][dest_col] == '.') {
-        return true;
-    } 
-    //check if it moves two squares and the next spot is open
-    else if(((dest_row == src_row + 2 * direction && src_row == 6) || (dest_row == src_row + 2 * direction && src_row == 2)) 
-        && game -> chessboard[src_row + direction][src_col] == '.' && game -> chessboard[dest_row][dest_col] == '.') {
-        return true;
-    } 
-    //if there is the a pawn of the opp color diag to it and if so then capture the pawn
-    else if(abs(dest_col - src_col) == 1 && dest_row == src_row + direction && game -> chessboard[dest_row][dest_col] != '.' && 
-             game -> chessboard[dest_row][dest_col] != piece) {
-                return true;
+    //check white pawn
+    else if(direction == 1) {
+        //check if it moves one and the next spot is open
+        if(src_row == dest_row + 1 && game -> chessboard[dest_row][dest_col] == '.' && src_col == dest_col) {
+            return true;
+        } 
+        //check if it moves two squares and the next spot is open
+        else if(src_row == dest_row + 2 && src_row == 6 && game -> chessboard[dest_row + 1][dest_col] == '.' 
+                && game -> chessboard[dest_row][dest_col] == '.') {
+            return true;
+        } 
+        //if there is the a pawn of the opp color diag to it and if so then capture the pawn
+        else if((src_row == dest_row + 1 && (src_col == dest_col - 1 || src_col == dest_col + 1)) && game -> chessboard[dest_row][dest_col] != '.' 
+                    && game->chessboard[dest_row][dest_col] != 'P') {
+            return true;
+        }
+    }
+
+    //check black pawn
+    else if(direction == 2) {
+        //check if it moves one and the next spot is open
+        if(src_row == dest_row - 1 && game -> chessboard[dest_row][dest_col] == '.') {
+            return true;
+        }
+        //check if it moves two squares and the next spot is open
+        else if(src_row == dest_row - 2 && src_row == 1 && game -> chessboard[dest_row - 1][src_col] == '.' 
+                && game -> chessboard[dest_row][dest_col] == '.') {
+            return true;
+        } 
+        //if there is the a pawn of the opp color diag to it and if so then capture the pawn
+        if((src_row == dest_row - 1 && (src_col == dest_col - 1 || src_col == dest_col + 1)) && game -> chessboard[dest_row][dest_col] != '.' 
+                    && game->chessboard[dest_row][dest_col] != 'P') {
+            return true;
+        }
     }
     //otherwise invalid 
     return false;
-
 }
 
 /* verifies that the rook is moving horizontally or vertically and there is an empty path */
 bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
-    //check if there is no piece at the location
-    // if(game -> chessboard[src_row][src_col] != 'r' && game -> chessboard[src_row][src_col] != 'R') {
-    //     return false;
-    // }
-
     char piece = game -> chessboard[src_row][src_col];
-    //char dest = game -> chessboard[dest_row][dest_col];
 
-    //check if the piece is not a pawn
+    //check if the piece is not a rook
     if(piece != 'r' && piece != 'R') {
         return false;
     }
@@ -135,7 +148,7 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
         }
 
         for(int i = src_col + horizPath; i != dest_col; i += horizPath) {
-            if(game -> chessboard[src_col][i] != '.') {
+            if(game -> chessboard[src_row][i] != '.') {
                 return false;
             }
         }
@@ -150,7 +163,7 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
         }
 
         for(int i = src_row + vertPath; i != dest_row; i += vertPath) {
-            if(game -> chessboard[i][src_col] != '.') {
+            if(game -> chessboard[i][dest_col] != '.') {
                 return false;
             }
         }
@@ -161,10 +174,8 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
 /* verifies the knight is moving in an L shape (two squares vertically and one square horizontally, or two squares horizontally and one square vertically) */
 bool is_valid_knight_move(int src_row, int src_col, int dest_row, int dest_col) {
 
-    //check if there is no piece at the location 
-    if (src_row < 0 || src_row >= 8 ||src_col < 0 || src_col >= 8 || dest_row < 0 || dest_row >= 8 || dest_col < 0 || dest_col >= 8) {
-        return false;
-    }
+    //    EXPECT_EQ(true, is_valid_knight_move(5, 5, 6, 7)) ; // valid move
+    //    EXPECT_EQ(false, is_valid_knight_move(5, 5, 2, 3)) ; // invalid move
 
     int row = abs(src_row - dest_row);
     int col = abs(src_col - dest_col);
@@ -182,11 +193,6 @@ bool is_valid_knight_move(int src_row, int src_col, int dest_row, int dest_col) 
 /* verifies the bishop is moving diagonally and there is a clear path */
 bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
-    //check if there is no piece at the location
-    if(game -> chessboard[src_row][src_col] != 'b' && game -> chessboard[src_row][src_col] != 'B') {
-        return false;
-    }
-
     int row, col;
     row = dest_row - src_row;
     col = dest_col - src_col;
@@ -196,6 +202,8 @@ bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, 
     } else {
         return false;
     }
+
+    (void)game;
 }
 
 /* verifies that the queen is moving like a rook (horizontally or vertically) or like a bishop (diagonally */
@@ -233,11 +241,6 @@ bool is_valid_king_move(int src_row, int src_col, int dest_row, int dest_col) {
 
 /* call each function we made for validity and check if they work */
 bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
-
-    //check if the src and destination is valid before entering if statement
-    if (src_row < 0 || src_col < 0 || src_row > 7 || src_col > 7 || dest_row < 0 || dest_col < 0 || dest_row > 7 || dest_col > 7) {
-        return false;
-    }
 
     //check the validity of each piece 
     if(piece == 'p' || piece == 'P') {
