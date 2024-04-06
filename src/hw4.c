@@ -306,9 +306,23 @@ int parse_move(const char *move, ChessMove *parsed_move) {
     }
 
     //parse_move_invalid_destination
+    if((int)strlen(move) == 5) {
+        char dest5Col = move[4];
+        if(dest5Col != 'q' && dest5Col != 'r' && dest5Col != 'b' && dest5Col != 'n') {
+            return PARSE_MOVE_INVALID_PROMOTION;
+        }
+        if(destRow != '1' || destRow != '8') {
+            return PARSE_MOVE_INVALID_DESTINATION;
+        }
+    }
 
     //parse_move_invalid_promotion
-
+    // if((int)strlen(move) == 5) {
+    //     char dest5Col = move[4];
+    //     if(dest5Col != 'q' && dest5Col != 'r' && dest5Col != 'b' && dest5Col != 'n') {
+    //         return PARSE_MOVE_INVALID_PROMOTION;
+    //     }
+    // }
 
     (void)move;
     (void)parsed_move;
