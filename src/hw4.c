@@ -306,7 +306,7 @@ int parse_move(const char *move, ChessMove *parsed_move) {
         return PARSE_MOVE_OUT_OF_BOUNDS;
     }  
 
-    //parse_move_invalid_destination promotion
+    //parse_move_invalid_destination and promotion
     if((int)strlen(move) == 5) {
         if(dest5Col != 'q' && dest5Col != 'r' && dest5Col != 'b' && dest5Col != 'n') {
             return PARSE_MOVE_INVALID_PROMOTION;
@@ -316,11 +316,12 @@ int parse_move(const char *move, ChessMove *parsed_move) {
         }
     }
 
-    //assign parsed values for valid 
+    //assign parsed values for start square
     parsed_move -> startSquare[0] = srcCol;
     parsed_move -> startSquare[1] = srcRow;
     parsed_move -> startSquare[2] = '\0';
 
+    //assign the parsed values for end square
     parsed_move -> endSquare[0] = destCol;
     parsed_move -> endSquare[1] = destRow;
     parsed_move -> endSquare[2] = dest5Col;
@@ -330,6 +331,31 @@ int parse_move(const char *move, ChessMove *parsed_move) {
 }
 
 int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_move) {
+
+    if(validate_move) {
+
+        //movi_out_of_turn
+        if((is_client && game -> currentPlayer != WHITE_PLAYER) ||
+            (!is_client && game -> currentPlayer != BLACK_PLAYER)) {
+                return MOVE_OUT_OF_TURN;
+            }
+
+        //move_nothing
+
+        //move_wrong_color
+
+        //move_sus
+
+        //move_not_a_pawn
+
+        //move_missing_promotion
+
+        //move_wrong
+
+    }
+
+    // update game->moves, game->chessboard, etc.
+
     (void)game;
     (void)move;
     (void)is_client;
