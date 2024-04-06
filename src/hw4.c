@@ -127,7 +127,7 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
     char piece = game -> chessboard[src_row][src_col];
 
     //check if the piece is not a rook
-    if(piece != 'r' && piece != 'R') {
+    if(piece != 'r' && piece != 'R' && piece != 'q' && piece != 'Q') {
         return false;
     }
 
@@ -193,29 +193,46 @@ bool is_valid_knight_move(int src_row, int src_col, int dest_row, int dest_col) 
 /* verifies the bishop is moving diagonally and there is a clear path */
 bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
-    int row, col;
-    row = dest_row - src_row;
-    col = dest_col - src_col;
-
-    if(abs(row) == abs(col)) {
-        return true;
-    } else {
+    if(src_row == dest_row || src_col == dest_col) {
         return false;
     }
 
-    (void)game;
+    //check to make sure row and col length are the same
+    int rowDifference = abs(dest_row - src_row);
+    int colDifference = abs(dest_col - src_col);
+
+    if(rowDifference != colDifference) {
+        return false;
+    }
+
+    //direction of movement
+    int row, col;
+    if(dest_row > src_row) {
+        row = 1;
+    } else {
+        row = -1;
+    }
+
+    if(dest_col > src_col) {
+        col = 1;
+    } else {
+        col = -1;
+    }
+
+    for(int i = row + src_row, j = col + src_col; i != dest_row && j != dest_col; i += row, j += col) {
+        if(game -> chessboard[i][j] != '.') {
+            return false;
+        }
+    }
+
+    return true;
 }
 
-/* verifies that the queen is moving like a rook (horizontally or vertically) or like a bishop (diagonally */
+/* verifies that the queen is moving like a rook (horizontally or vertically) or like a bishop (diagonally) */
 bool is_valid_queen_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
 
-    //check if there is no piece at the location
-    if(game -> chessboard[src_row][src_col] != 'q' && game -> chessboard[src_row][src_col] != 'Q') {
-        return false;
-    }
-
     //queen can move like a rook or a bishop
-    if(is_valid_rook_move(src_row, src_col, dest_row, dest_col, game) || is_valid_bishop_move(src_row, src_col, dest_row, dest_col, game)) {
+    if((is_valid_rook_move(src_row, src_col, dest_row, dest_col, game) == true) || (is_valid_bishop_move(src_row, src_col, dest_row, dest_col, game) == true)) {
         return true;
     } else {
         return false;
@@ -249,7 +266,7 @@ bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_
     else if(piece == 'r' || piece == 'R') {
         return is_valid_rook_move(src_row, src_col, dest_row, dest_col, game);
 
-    } else if(piece == 'k' || piece == 'K') {
+    } else if(piece == 'n' || piece == 'N') {
         return is_valid_knight_move(src_row, src_col, dest_row, dest_col);
 
     } else if(piece == 'b' || piece == 'B') {
@@ -264,6 +281,8 @@ bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_
     } else {
         return false;
     }
+    return false;
+
 }
 
 void fen_to_chessboard(const char *fen, ChessGame *game) {
