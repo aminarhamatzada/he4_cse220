@@ -293,6 +293,7 @@ int parse_move(const char *move, ChessMove *parsed_move) {
     char srcRow = move[1];
     char destCol = move[2];
     char destRow = move[3];
+    char dest5Col = move[4];
 
     //parse_move_invalid_format
     if(((int)strlen(move) != 4 && (int)strlen(move) != 5) ||
@@ -303,29 +304,28 @@ int parse_move(const char *move, ChessMove *parsed_move) {
     //parse_move_out_of_bounds
     if(srcRow < '1' || srcRow > '8' || destRow < '1' || destRow > '8') {
         return PARSE_MOVE_OUT_OF_BOUNDS;
-    }
+    }  
 
-    //parse_move_invalid_destination
+    //parse_move_invalid_destination promotion
     if((int)strlen(move) == 5) {
-        char dest5Col = move[4];
         if(dest5Col != 'q' && dest5Col != 'r' && dest5Col != 'b' && dest5Col != 'n') {
             return PARSE_MOVE_INVALID_PROMOTION;
         }
-        if(destRow != '1' || destRow != '8') {
+        if(destRow != '1' && destRow != '8') {
             return PARSE_MOVE_INVALID_DESTINATION;
         }
     }
 
-    //parse_move_invalid_promotion
-    // if((int)strlen(move) == 5) {
-    //     char dest5Col = move[4];
-    //     if(dest5Col != 'q' && dest5Col != 'r' && dest5Col != 'b' && dest5Col != 'n') {
-    //         return PARSE_MOVE_INVALID_PROMOTION;
-    //     }
-    // }
+    //assign parsed values for valid 
+    parsed_move -> startSquare[0] = srcCol;
+    parsed_move -> startSquare[1] = srcRow;
+    parsed_move -> startSquare[2] = '\0';
 
-    (void)move;
-    (void)parsed_move;
+    parsed_move -> endSquare[0] = destCol;
+    parsed_move -> endSquare[1] = destRow;
+    parsed_move -> endSquare[2] = dest5Col;
+    parsed_move -> endSquare[3] = '\0';
+
     return 0;
 }
 
