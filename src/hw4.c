@@ -33,8 +33,58 @@ void initialize_game(ChessGame *game) {
 }
 
 void chessboard_to_fen(char fen[], ChessGame *game) {
-    (void)fen;
-    (void)game;
+
+    int empty = 0;
+    int currentFenPiece; 
+    char color;
+    fen[0] = '\0';
+
+    //color of the current plater
+    if(game -> currentPlayer == WHITE_PLAYER) {
+        color = 'w';
+    } else if(game -> currentPlayer == BLACK_PLAYER) {
+        color = 'b';
+    }
+
+    for(int row = 0; row < 8; row++) {
+        empty = 0;
+        for(int col = 0; col < 8; col++) {
+
+            //piece at the current position
+            char piece = game -> chessboard[row][col];
+        
+            if(piece == '.') {
+                empty++;
+            }
+
+            if (empty > 0) {
+                    sprintf(fen + strlen(fen), "%d", empty);
+                    empty = 0;
+                }
+
+            if(toupper(piece)) {
+                currentFenPiece = toupper(piece); //white
+            } else if(tolower(piece)) {
+                currentFenPiece = tolower(piece); //black
+            }
+
+            sprintf(fen + strlen(fen), "%c", currentFenPiece);
+            
+        }
+
+        if (empty > 0) {
+            sprintf(fen + strlen(fen), "%d", empty);
+        }
+
+        // slash at the end of each row
+        if(row < 7) {
+            strcat(fen, "/");
+        }
+    }
+
+    strcat(fen, " ");
+    strcat(fen, &color);
+
 }
 
 /* helper function - checking direction of movement based on color */ 
@@ -330,37 +380,119 @@ int parse_move(const char *move, ChessMove *parsed_move) {
     return 0;
 }
 
+/* helper functon - find the respective row and col */
+void find_row_and_col(const char *square, int *row, int *col) {
+    *col = (square[0] - 'a');
+    *row = 7 - (square[1] - '1');
+}
+
+
 int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_move) {
+
+    //initialize all my variables first
+    int srcRow, srcCol, destRow, destCol;
+    find_row_and_col(move -> startSquare, &srcRow, &srcCol);
+    find_row_and_col(move -> endSquare, &destRow, &destCol);
+    char piece = game -> chessboard[srcRow][srcCol];
+    char destPiece = game -> chessboard[destRow][destCol];
+    char promotedPiece;
+
+    if (destPiece != '.') {
+        destPiece = game -> chessboard[destRow][destCol];
+    } else {
+        destPiece = '.';
+    }   
+
+    //find if it is white or black
+    int isWhite, isBlack;
+    if (is_client == true && game -> currentPlayer == WHITE_PLAYER) {
+        isWhite = 1;
+    } else if(is_client == false && game -> currentPlayer == BLACK_PLAYER) {
+        isBlack = 1;
+    }
+
+   // display_chessboard(game);
 
     if(validate_move) {
 
-        //movi_out_of_turn
+        //move_out_of_turn
         if((is_client && game -> currentPlayer != WHITE_PLAYER) ||
             (!is_client && game -> currentPlayer != BLACK_PLAYER)) {
                 return MOVE_OUT_OF_TURN;
             }
 
         //move_nothing
+        if(piece == '.') {
+            return MOVE_NOTHING;
+        }
 
         //move_wrong_color
+        if((isWhite == 1 && islower(piece)) || (isBlack == 1 && isupper(piece))) {
+            return MOVE_WRONG_COLOR;
+        }
 
         //move_sus
-
+        if(isupper(piece) && isupper(destPiece)) {
+            return MOVE_SUS;
+        }
+        if((islower(piece) && islower(destPiece))) {
+            return MOVE_SUS;
+        }
+        
         //move_not_a_pawn
+        if (strlen(move -> endSquare) + strlen(move -> startSquare) == 5 && (piece != 'P' && piece != 'p')) {
+            return MOVE_NOT_A_PAWN;
+        }
 
         //move_missing_promotion
+        if (strlen(move -> endSquare) == 4 && (destRow == 0 || destRow == 7) && (piece == 'P' || piece == 'p')) {
+            return MOVE_MISSING_PROMOTION;
+        }
 
         //move_wrong
+        if(!is_valid_move(piece, srcRow, srcCol, destRow, destCol, game) == true) {
+            return MOVE_WRONG;
+        }
 
+        //promote a pawn
+        if(piece == 'P' && destRow == 7) {
+            promotedPiece = move -> endSquare[2]; //white
+            game -> chessboard[destRow][destCol] = promotedPiece;
+        }
+        if(piece == 'p' && destRow == 0) {
+            promotedPiece = move -> endSquare[2]; //black
+            game -> chessboard[destRow][destCol] = promotedPiece;
+        }
+    } 
+
+    //update game -> moves
+    game -> moves[game -> moveCount] = *move;
+    game -> moveCount++;
+
+    // if(game -> moveCount < MAX_MOVES) {
+    //     game -> chessboard[destRow][destCol];
+    // }
+
+    if(destPiece != '.') {
+        game -> capturedPieces[game -> capturedCount] = destPiece;
+        game -> capturedCount++;
     }
 
-    // update game->moves, game->chessboard, etc.
+    // if(game -> capturedCount < MAX_CAPTURED_PIECES) {
 
-    (void)game;
-    (void)move;
-    (void)is_client;
-    (void)validate_move;
-    return -999;
+    // }
+    game -> chessboard[destRow][destCol] = piece;
+    game -> chessboard[srcRow][srcCol] = '.';
+
+    //update the next player (white goes to black and vice versa)
+    if(isWhite) {
+        game -> currentPlayer = BLACK_PLAYER;
+    } else {
+        game -> currentPlayer = WHITE_PLAYER;
+    }
+    display_chessboard(game);
+
+    return 0;
 }
 
 int send_command(ChessGame *game, const char *message, int socketfd, bool is_client) {
@@ -379,11 +511,22 @@ int receive_command(ChessGame *game, const char *message, int socketfd, bool is_
     return -999;
 }
 
+/* open the file and generate the fen string */
 int save_game(ChessGame *game, const char *username, const char *db_filename) {
+
+    FILE *fname = fopen(db_filename, "a");
+    if(fname == NULL) {
+        return 1;
+    }
+    char fen[BUFFER_SIZE];
+    chessboard_to_fen(fen, game);
+    fprintf(fname, "%s:%s\n", username, fen);
+    fclose(fname);
+
     (void)game;
     (void)username;
     (void)db_filename;
-    return -999;
+    return 0;
 }
 
 int load_game(ChessGame *game, const char *username, const char *db_filename, int save_number) {
