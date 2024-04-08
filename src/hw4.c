@@ -404,10 +404,10 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
     }   
 
     //find if it is white or black
-    int isWhite, isBlack;
-    if (is_client == true && game -> currentPlayer == WHITE_PLAYER) {
+    int isWhite = 0, isBlack = 0;
+    if (is_client == true) {
         isWhite = 1;
-    } else if(is_client == false && game -> currentPlayer == BLACK_PLAYER) {
+    } else if(is_client == false) {
         isBlack = 1;
     }
 
@@ -416,10 +416,12 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
     if(validate_move) {
 
         //move_out_of_turn
-        if((is_client && game -> currentPlayer != WHITE_PLAYER) ||
-            (!is_client && game -> currentPlayer != BLACK_PLAYER)) {
-                return MOVE_OUT_OF_TURN;
-            }
+        if((isWhite == 1) && game -> currentPlayer != WHITE_PLAYER) {
+            return MOVE_OUT_OF_TURN;
+        }
+        else if((isBlack == 1) && game -> currentPlayer != BLACK_PLAYER) {
+            return MOVE_OUT_OF_TURN;
+        }
 
         //move_nothing
         if(piece == '.') {
@@ -454,7 +456,6 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
             return MOVE_WRONG;
         }
 
-        //promote a pawn
         if(piece == 'P' && destRow == 7) {
             promotedPiece = move -> endSquare[2]; //white
             game -> chessboard[destRow][destCol] = promotedPiece;
@@ -465,12 +466,13 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         }
     } 
 
+
     //update game -> moves
     game -> moves[game -> moveCount] = *move;
     game -> moveCount++;
 
     // if(game -> moveCount < MAX_MOVES) {
-    //     game -> chessboard[destRow][destCol];
+    //     return MAX_MOVES;
     // }
 
     if(destPiece != '.') {
@@ -479,8 +481,9 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
     }
 
     // if(game -> capturedCount < MAX_CAPTURED_PIECES) {
-
+    //     return MAX_CAPTURED_PIECES;
     // }
+
     game -> chessboard[destRow][destCol] = piece;
     game -> chessboard[srcRow][srcCol] = '.';
 
