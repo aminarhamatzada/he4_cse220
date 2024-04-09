@@ -326,8 +326,43 @@ bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_
 }
 
 void fen_to_chessboard(const char *fen, ChessGame *game) {
-    (void)fen;
-    (void)game;
+   
+    int row = 0;
+    int col = 0;
+    int empty = 0;
+
+    //parse the string and move row by row
+    for(int i = 0; fen[i] != '\0' && row < 8; i++) {
+        char piece = fen[i];
+      
+        if(piece == '/') {
+            row++;
+            col = 0; //reset the column
+        }
+        else if(piece >= '1' && piece <= '8'){
+            empty = piece - '0';
+            
+            while(empty != 0) {
+                game -> chessboard[row][col] = '.';
+                col++;
+                empty--; //decrement until 0
+            }
+        }
+	    else { 
+            //place the piece
+		    game -> chessboard[row][col++] = piece;
+	    }
+    }
+
+    char color = fen[strlen(fen) - 1];
+
+    //find color
+    if(color == 'w') {
+        game -> currentPlayer = WHITE_PLAYER;
+    } 
+    else if(color == 'b') {
+        game -> currentPlayer = BLACK_PLAYER;
+   }
 }
 
 int parse_move(const char *move, ChessMove *parsed_move) {
@@ -419,11 +454,11 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         }
 
         //move_wrong_color
-        if(isWhite == 1 && islower(piece)) {
+        if(game -> currentPlayer == WHITE_PLAYER && islower(piece)) {
             return MOVE_WRONG_COLOR; //this is returning for the last test case
         }
 
-        if(isBlack == 1 && isupper(piece)) {
+        if(game -> currentPlayer == BLACK_PLAYER && isupper(piece)) {
             return MOVE_WRONG_COLOR;
         }
 
@@ -499,28 +534,26 @@ int receive_command(ChessGame *game, const char *message, int socketfd, bool is_
     return -999;
 }
 
-/* helper function to see if the username is valid*/
-
 /* open the file and generate the fen string */
 int save_game(ChessGame *game, const char *username, const char *db_filename) {
 
     FILE *fname = fopen(db_filename, "a");
-    if(fname == NULL) {
-        return 1;
+    if(username[0] == '\0') {
+        return -1;
     }
-    while(*username) {
-        if (*username == ' ') {
+    int i = 0;
+    while(username[i] != '\0') {
+        if (username[i]== ' ') {
+	        fclose(fname);
             return -1;
         }
+        i++;
     }
+
     char fen[BUFFER_SIZE];
     chessboard_to_fen(fen, game);
     fprintf(fname, "%s:%s\n", username, fen);
     fclose(fname);
-
-    (void)game;
-    (void)username;
-    (void)db_filename;
     return 0;
 }
 
