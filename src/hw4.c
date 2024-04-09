@@ -34,8 +34,7 @@ void initialize_game(ChessGame *game) {
 
 void chessboard_to_fen(char fen[], ChessGame *game) {
 
-    int empty = 0;
-    int currentFenPiece; 
+    int empty = 0; 
     char color;
     fen[0] = '\0';
 
@@ -47,7 +46,7 @@ void chessboard_to_fen(char fen[], ChessGame *game) {
     }
 
     for(int row = 0; row < 8; row++) {
-        empty = 0;
+      //  empty = 0;
         for(int col = 0; col < 8; col++) {
 
             //piece at the current position
@@ -56,24 +55,19 @@ void chessboard_to_fen(char fen[], ChessGame *game) {
             if(piece == '.') {
                 empty++;
             }
-
-            if (empty > 0) {
-                    sprintf(fen + strlen(fen), "%d", empty);
-                    empty = 0;
+            else if(piece!='.'){
+                if(empty>0){
+                    sprintf(fen + strlen(fen) , "%c", '0'+empty);
+                    
                 }
-
-            if(toupper(piece)) {
-                currentFenPiece = toupper(piece); //white
-            } else if(tolower(piece)) {
-                currentFenPiece = tolower(piece); //black
+                sprintf(fen+strlen(fen), "%c", piece);
+                empty=0;
             }
-
-            sprintf(fen + strlen(fen), "%c", currentFenPiece);
-            
         }
 
         if (empty > 0) {
             sprintf(fen + strlen(fen), "%d", empty);
+            empty=0;
         }
 
         // slash at the end of each row
@@ -82,8 +76,9 @@ void chessboard_to_fen(char fen[], ChessGame *game) {
         }
     }
 
-    strcat(fen, " ");
-    strcat(fen, &color);
+    sprintf(fen + strlen(fen), "%s", " ");
+    sprintf(fen + strlen(fen) , "%c", color);
+   // sprintf(fen +strlen(fen), "%c", '\0');
 
 }
 
@@ -386,7 +381,6 @@ void find_row_and_col(const char *square, int *row, int *col) {
     *row = 7 - (square[1] - '1');
 }
 
-
 int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_move) {
 
     //initialize all my variables first
@@ -411,8 +405,6 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         isBlack = 1;
     }
 
-   // display_chessboard(game);
-
     if(validate_move) {
 
         //move_out_of_turn
@@ -429,7 +421,11 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         }
 
         //move_wrong_color
-        if((isWhite == 1 && islower(piece)) || (isBlack == 1 && isupper(piece))) {
+        if(isWhite == 1 && islower(piece)) {
+            return MOVE_WRONG_COLOR; //this is returning for the last test case
+        }
+
+        if(isBlack == 1 && isupper(piece)) {
             return MOVE_WRONG_COLOR;
         }
 
@@ -442,12 +438,12 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         }
         
         //move_not_a_pawn
-        if (strlen(move -> endSquare) + strlen(move -> startSquare) == 5 && (piece != 'P' && piece != 'p')) {
+        if (strlen(move -> startSquare) + strlen(move -> endSquare) == 5 && (piece != 'P' && piece != 'p')) {
             return MOVE_NOT_A_PAWN;
         }
 
         //move_missing_promotion
-        if (strlen(move -> endSquare) == 4 && (destRow == 0 || destRow == 7) && (piece == 'P' || piece == 'p')) {
+        if (strlen(move -> startSquare) + strlen(move -> endSquare) == 4 && (destRow == 0 || destRow == 7) && (piece == 'P' || piece == 'p')) {
             return MOVE_MISSING_PROMOTION;
         }
 
@@ -466,24 +462,16 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         }
     } 
 
-
     //update game -> moves
     game -> moves[game -> moveCount] = *move;
     game -> moveCount++;
-
-    // if(game -> moveCount < MAX_MOVES) {
-    //     return MAX_MOVES;
-    // }
 
     if(destPiece != '.') {
         game -> capturedPieces[game -> capturedCount] = destPiece;
         game -> capturedCount++;
     }
 
-    // if(game -> capturedCount < MAX_CAPTURED_PIECES) {
-    //     return MAX_CAPTURED_PIECES;
-    // }
-
+    //update game -> chessboard
     game -> chessboard[destRow][destCol] = piece;
     game -> chessboard[srcRow][srcCol] = '.';
 
@@ -493,7 +481,6 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
     } else {
         game -> currentPlayer = WHITE_PLAYER;
     }
-    display_chessboard(game);
 
     return 0;
 }
