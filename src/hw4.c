@@ -46,7 +46,6 @@ void chessboard_to_fen(char fen[], ChessGame *game) {
     }
 
     for(int row = 0; row < 8; row++) {
-      //  empty = 0;
         for(int col = 0; col < 8; col++) {
 
             //piece at the current position
@@ -56,18 +55,18 @@ void chessboard_to_fen(char fen[], ChessGame *game) {
                 empty++;
             }
             else if(piece!='.'){
-                if(empty>0){
-                    sprintf(fen + strlen(fen) , "%c", '0'+empty);
+                if(empty > 0){
+                    sprintf(fen + strlen(fen) , "%c", '0' + empty);
                     
                 }
                 sprintf(fen+strlen(fen), "%c", piece);
-                empty=0;
+                empty = 0;
             }
         }
 
         if (empty > 0) {
             sprintf(fen + strlen(fen), "%d", empty);
-            empty=0;
+            empty = 0;
         }
 
         // slash at the end of each row
@@ -78,7 +77,6 @@ void chessboard_to_fen(char fen[], ChessGame *game) {
 
     sprintf(fen + strlen(fen), "%s", " ");
     sprintf(fen + strlen(fen) , "%c", color);
-   // sprintf(fen +strlen(fen), "%c", '\0');
 
 }
 
@@ -501,12 +499,19 @@ int receive_command(ChessGame *game, const char *message, int socketfd, bool is_
     return -999;
 }
 
+/* helper function to see if the username is valid*/
+
 /* open the file and generate the fen string */
 int save_game(ChessGame *game, const char *username, const char *db_filename) {
 
     FILE *fname = fopen(db_filename, "a");
     if(fname == NULL) {
         return 1;
+    }
+    while(*username) {
+        if (*username == ' ') {
+            return -1;
+        }
     }
     char fen[BUFFER_SIZE];
     chessboard_to_fen(fen, game);
