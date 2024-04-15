@@ -330,6 +330,15 @@ void fen_to_chessboard(const char *fen, ChessGame *game) {
     int row = 0;
     int col = 0;
     int empty = 0;
+    char color = fen[strlen(fen) - 1];
+
+    //find color
+    if(color == 'w') {
+        game -> currentPlayer = WHITE_PLAYER;
+    } 
+    else if(color == 'b') {
+        game -> currentPlayer = BLACK_PLAYER;
+   }
 
     //parse the string and move row by row
     for(int i = 0; fen[i] != '\0' && row < 8; i++) {
@@ -345,7 +354,7 @@ void fen_to_chessboard(const char *fen, ChessGame *game) {
             while(empty != 0) {
                 game -> chessboard[row][col] = '.';
                 col++;
-                empty--; //decrement until 0
+                empty--; //decrement until none left
             }
         }
 	    else { 
@@ -353,16 +362,6 @@ void fen_to_chessboard(const char *fen, ChessGame *game) {
 		    game -> chessboard[row][col++] = piece;
 	    }
     }
-
-    char color = fen[strlen(fen) - 1];
-
-    //find color
-    if(color == 'w') {
-        game -> currentPlayer = WHITE_PLAYER;
-    } 
-    else if(color == 'b') {
-        game -> currentPlayer = BLACK_PLAYER;
-   }
 }
 
 int parse_move(const char *move, ChessMove *parsed_move) {
@@ -540,29 +539,55 @@ int save_game(ChessGame *game, const char *username, const char *db_filename) {
     FILE *fname = fopen(db_filename, "a");
     if(username[0] == '\0') {
         return -1;
-    }
-    int i = 0;
-    while(username[i] != '\0') {
-        if (username[i]== ' ') {
-	        fclose(fname);
+    } //no username 
+
+    for(int i = 0; username[i] != '0'; i++) {
+        if(username[i] == ' ') {
+            fclose(fname);
             return -1;
         }
-        i++;
     }
 
     char fen[BUFFER_SIZE];
     chessboard_to_fen(fen, game);
     fprintf(fname, "%s:%s\n", username, fen);
     fclose(fname);
+
     return 0;
 }
 
 int load_game(ChessGame *game, const char *username, const char *db_filename, int save_number) {
+
+    FILE *file = fopen(db_filename, "r");
+
+    if(file == NULL) {
+		return -1;
+    } //null file
+
+    if(save_number <= 0) {
+        return -1;
+    } //invalid save
+
+    char fen[100] = {'\0'};
+    char read[100] = {'\0'};
+    int count = 0;
+    char player;
+
+    while(fscanf(file, "%s:%s %c", read, fen, &player) > 0) {
+        if(strcmp(read, username) == 0) {
+            count++;
+            if(count == save_number) {
+                //load the game here
+                fen_to_chessboard(fen, game);
+                return 0;
+                break;
+            }
+        }
+    }
+
     (void)game;
-    (void)username;
-    (void)db_filename;
-    (void)save_number;
-    return -999;
+    fclose(file);
+    return -1;
 }
 
 void display_chessboard(ChessGame *game) {
